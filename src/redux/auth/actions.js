@@ -8,11 +8,14 @@ const actions = {
   CHECKING_STATE: 'CHECKING_STATE',
   INITIAL_STATE_CHECKED: 'INITIAL_STATE_CHECKED',
   checkAuthorization: () => ({ type: actions.CHECK_AUTHORIZATION }),
-  checkInitialState: () => ({
-    type: actions.CHECKING_STATE
-  }),
-  login: () => ({
-    type: actions.CHECKING_STATE
+  // checkInitialState: () => ({
+  //   type: actions.CHECKING_STATE
+  // }),
+  login: (initialState, username, password) => ({
+    type: actions.LOGIN_REQUEST,
+    initialState,
+    username,
+    password
   }),
   logout: () => ({
     type: actions.LOGOUT

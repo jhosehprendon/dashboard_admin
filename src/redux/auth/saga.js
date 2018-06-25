@@ -1,51 +1,68 @@
-import { all, takeEvery, put, fork, call } from 'redux-saga/effects';
+import { all, takeEvery, put, fork } from 'redux-saga/effects';
 import { push } from 'react-router-redux';
 import { getToken, clearToken } from '../../helpers/utility';
 import actions from './actions';
 import axios from 'axios';
 
 // auth0 or express JWT
-const fakeApiCall = true; 
+// const fakeApiCall = true; 
 
 export function* loginRequest() {
-  yield takeEvery(actions.CHECKING_STATE, function*() {
-    if (fakeApiCall) {
-      yield put({
-        type: actions.LOGIN_SUCCESS,
-        token: 'secret token',
-        profile: 'Profile'
-      });
+  yield takeEvery('LOGIN_REQUEST', function*(initialState, username, password) {
+    console.log(initialState)
+    if (initialState && username && password) {
+      const result = axios.post('http://api-test.efundex.com/admin/api/login',{
+        body: {
+        "username": username,
+        "password": password,
+        "_token": initialState
+        }
+      })
+      if(result.status === 200 ) {
+        yield put({
+          type: actions.LOGIN_SUCCESS,
+          token: initialState,
+          profile: 'Profile'
+        });
+      }else {
+        yield put({ type: actions.LOGIN_ERROR });
+      }
+      
     } else {
       yield put({ type: actions.LOGIN_ERROR });
     }
   });
-}  
+}
+
+// export function* checkInitialStateSaga() {
+  
+//   yield takeEvery(actions.CHECKING_STATE, function*() {
+//     const initialState = yield axios.get('http://api-test.efundex.com/admin/api/initial-state')
+//     console.log(initialState)
+
+//     yield put({ type: actions.INITIAL_STATE_CHECKED, token: initialState.data.csrf_tokens.login })
+//   })
+  
+// }
 
 // export function* loginRequest() {
-//   console.log("TEST!!!!!!!!") 
-//   yield takeEvery('CHECKING_STATE', function*() {
-//     if (fakeApiCall) {
+//   yield takeEvery(actions.INITIAL_STATE_CHECKED, function*(payload) {
+//     if (payload.token) {
+//         axios.post('http://api-test.efundex.com/admin/api/login',{
+//         "username": "admin",
+//         "password": "admin",
+//         "_token": payload.token
+//       })
 //       yield put({
 //         type: actions.LOGIN_SUCCESS,
-//         token: 'secret token',
+//         token: payload.token,
 //         profile: 'Profile'
 //       });
 //     } else {
 //       yield put({ type: actions.LOGIN_ERROR });
 //     }
 //   });
-// }
-
-export function* checkInitialStateSaga() {
-  
-  yield takeEvery(actions.CHECKING_STATE, function*(payload) {
-    console.log('CHECK INITIAL STATE TRIGGERED')
-    const initialState = yield call(axios.get('http://api-test.efundex.com/admin/api/initial-state')
-  );
-    yield put({ type: actions.INITIAL_STATE_CHECKED, token: initialState.data.csrf_tokens.login })
-  })
-  
-}
+// }  
 
 export function* loginSuccess() {
   yield takeEvery(actions.LOGIN_SUCCESS, function*(payload) {
@@ -81,7 +98,6 @@ export default function* rootSaga() {
     fork(loginRequest),
     fork(loginSuccess),
     fork(loginError),
-    fork(logout),
-    fork(checkInitialStateSaga)
+    fork(logout)
   ]);
 }

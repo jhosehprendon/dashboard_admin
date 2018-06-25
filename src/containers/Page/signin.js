@@ -11,14 +11,29 @@ import Firebase from "../../helpers/firebase";
 import FirebaseLogin from "../../components/firebase";
 import IntlMessages from "../../components/utility/intlMessages";
 import SignInStyleWrapper from "./signin.style";
+import axios from 'axios';
 
 const { login } = authAction;
 const { clearMenu } = appAction;
 
 class SignIn extends Component {
   state = {
-    redirectToReferrer: false
+    redirectToReferrer: false,
+    initialState: null,
+    username: '',
+    password: ''
   };
+  
+  getInitialState = async () => {
+    const res = await axios.get(`http://api-test.efundex.com/admin/api/initial-state`);
+    this.setState({ initialState: res.data.csrf_tokens.login })
+    // console.log(this.state.initialState)
+  }
+
+  componentDidMount(){
+    this.getInitialState();
+  };
+
   componentWillReceiveProps(nextProps) {
     if (
       this.props.isLoggedIn !== nextProps.isLoggedIn &&
@@ -27,13 +42,18 @@ class SignIn extends Component {
       this.setState({ redirectToReferrer: true });
     }
   }
-  handleLogin = () => {
+  handleLogin = (initialState) => {
     const { clearMenu, login } = this.props;
-    // checkInitialState();
-    login();
+    login(this.state.initialState, this.state.username, this.state.password);
     clearMenu();
     this.props.history.push("/dashboard");
   };
+  handleUserChange = (e) => {
+    this.setState({username: e.target.value});
+  }
+  handlePasswordChange = (e) => {
+    this.setState({password: e.target.value});
+  }
   render() {
     const from = { pathname: "/dashboard" };
     const { redirectToReferrer } = this.state;
@@ -53,11 +73,11 @@ class SignIn extends Component {
 
             <div className="isoSignInForm">
               <div className="isoInputWrapper">
-                <Input size="large" placeholder="Username" />
+                <Input size="large" placeholder="Username" value={this.state.username} onChange={this.handleUserChange}/>
               </div>
 
               <div className="isoInputWrapper">
-                <Input size="large" type="password" placeholder="Password" />
+                <Input size="large" type="password" placeholder="Password" value={this.state.password} onChange={this.handlePasswordChange} />
               </div>
 
               <div className="isoInputWrapper isoLeftRightComponent">
