@@ -8,28 +8,29 @@ import axios from 'axios';
 // const fakeApiCall = true; 
 
 export function* loginRequest() {
-  yield takeEvery('LOGIN_REQUEST', function*(initialState, username, password) {
+  yield takeEvery('LOGIN_REQUEST', function*({initialState, username, password}) {
     console.log(initialState)
     if (initialState && username && password) {
-      const result = axios.post('http://api-test.efundex.com/admin/api/login',{
-        body: {
-        "username": username,
-        "password": password,
-        "_token": initialState
-        }
-      })
-      if(result.status === 200 ) {
-        yield put({
-          type: actions.LOGIN_SUCCESS,
-          token: initialState,
-          profile: 'Profile'
-        });
-      }else {
+      try {
+        const res = yield axios.post(
+          "http://api-test.efundex.com/admin/api/login", {
+            body: {
+            "username": username,
+            "password": password,
+            "_token": initialState
+            }
+          }
+        );
+          yield put({
+            type: actions.LOGIN_SUCCESS,
+            token: initialState,
+            profile: 'Profile',
+            res
+          });
+      } catch (err) {
+        console.log(err);
         yield put({ type: actions.LOGIN_ERROR });
       }
-      
-    } else {
-      yield put({ type: actions.LOGIN_ERROR });
     }
   });
 }
